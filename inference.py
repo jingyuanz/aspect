@@ -36,9 +36,11 @@ class Inferencer:
     def predict(self, sent):
         emb = [self.tokenizer.encode(sent, add_special_tokens=True)]
         emb = torch.LongTensor(emb).to(self.cpu)
-        res = self.model(emb)
-        print(len(res))
-        print(res[0], res[1])
+        ate, apc = self.model(emb)
+        ate_logits = torch.argmax(F.log_softmax(ate, dim=2), dim=2)
+        ate= ate_logits.detach().cpu().numpy()
+        apc = torch.argmax(apc, -1).item()
+        print(ate, apc)
 
 if __name__ == '__main__':
     inferencer = Inferencer()
