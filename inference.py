@@ -30,14 +30,15 @@ class Inferencer:
         self.cpu = torch.device("cpu")
 
     def load_model(self):
-        self.model = load('./output/model/pytorch_model.bin', map_location=self.cpu)
+        self.model = BertModel.from_pretrained('./output/model/')
+        #print(self.model)
 
     def predict(self, sent):
         emb = [self.tokenizer.encode(sent, add_special_tokens=True)]
         emb = torch.LongTensor(emb).to(self.cpu)
         res = self.model(emb)
-
-        print(res)
+        print(len(res))
+        print(res[0], res[1])
 
 if __name__ == '__main__':
     inferencer = Inferencer()
