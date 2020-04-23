@@ -34,10 +34,12 @@ class Inferencer:
     def predict(self, sent):
         emb = [self.tokenizer.encode(sent, add_special_tokens=True)]
         emb = torch.LongTensor(emb).to(self.device)
+
         print(emb)
 
 if __name__ == '__main__':
     inferencer = Inferencer()
+    inferencer.load_model()
     inferencer.predict("我不喜欢这个老师")
 
 
