@@ -11,13 +11,14 @@ import torch
 import torch.nn.functional as F
 from pytorch_transformers.optimization import AdamW
 from pytorch_transformers.tokenization_bert import BertTokenizer
-from pytorch_transformers.modeling_bert import BertModel
+from pytorch_transformers.modeling_bert import BertModel, BertForSequenceClassification
 from seqeval.metrics import classification_report
 from torch.utils.data import (DataLoader, RandomSampler, SequentialSampler, TensorDataset)
 
 from utils.data_utils import ATEPCProcessor, convert_examples_to_features
-from model.lcf_atepc import LCF_ATEPC
-from torch import load
+# from model.lcf_atepc import LCF_ATEPC
+from model.lc_pred import LCF_ATEPC
+from torch import load, save
 
 class Inferencer:
     def __init__(self):
@@ -30,13 +31,15 @@ class Inferencer:
         self.cpu = torch.device("cpu")
 
     def load_model(self):
-        self.model = BertModel.from_pretrained('./output/model/')
+        self.model = LCF_ATEPC.from_pretrained('./output/model/')
+        self.model.eval()
         #print(self.model)
 
     def predict(self, sent):
         emb = [self.tokenizer.encode(sent, add_special_tokens=True)]
         emb = torch.LongTensor(emb).to(self.cpu)
         ate, apc = self.model(emb)
+
         ate_logits = torch.argmax(F.log_softmax(ate, dim=2), dim=2)
         ate= ate_logits.detach().cpu().numpy()
         apc = torch.argmax(apc, -1).item()
