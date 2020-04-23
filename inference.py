@@ -27,15 +27,17 @@ class Inferencer:
         self.n_class = len(self.labels)
         self.tokenizer = BertTokenizer.from_pretrained('./output/model/vocab.txt')
         self.device = torch.device("cuda:1" if torch.cuda.is_available() else 'cpu')
+        self.cpu = torch.device("cpu")
 
     def load_model(self):
-        self.model = load('./output/model/pytorch_model.bin')
+        self.model = load('./output/model/pytorch_model.bin', map_location=self.cpu)
 
     def predict(self, sent):
         emb = [self.tokenizer.encode(sent, add_special_tokens=True)]
-        emb = torch.LongTensor(emb).to(self.device)
+        emb = torch.LongTensor(emb).to(self.cpu)
+        res = self.model(emb)
 
-        print(emb)
+        print(res)
 
 if __name__ == '__main__':
     inferencer = Inferencer()
