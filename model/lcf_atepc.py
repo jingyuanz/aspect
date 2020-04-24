@@ -136,7 +136,8 @@ class LCF_ATEPC(BertForTokenClassification):
             input_ids_spc = self.get_ids_for_local_context_extractor(input_ids_spc)
             labels = self.get_batch_token_labels_bert_base_indices(labels)
         global_context_out, _ = self.bert(input_ids_spc, token_type_ids, attention_mask)
-        polarity_labels = self.get_batch_polarities(polarities)
+        if polarities is not None:
+            polarity_labels = self.get_batch_polarities(polarities)
 
         # code block for ATE task
         batch_size, max_len, feat_dim = global_context_out.shape
@@ -144,7 +145,9 @@ class LCF_ATEPC(BertForTokenClassification):
         for i in range(batch_size):
             jj = -1
             for j in range(max_len):
-                if valid_ids[i][j].item() == 1:
+                if valid_ids is None:
+                    global_valid_output[i][jj] = global_context_out[i][j]
+                elif valid_ids[i][j].item() == 1:
                     jj += 1
                     global_valid_output[i][jj] = global_context_out[i][j]
         global_context_out = self.dropout(global_valid_output)
@@ -163,7 +166,9 @@ class LCF_ATEPC(BertForTokenClassification):
             for i in range(batch_size):
                 jj = -1
                 for j in range(max_len):
-                    if valid_ids[i][j].item() == 1:
+                    if valid_ids is None:
+                        local_valid_output[i][jj] = local_context_out[i][j]
+                    elif valid_ids[i][j].item() == 1:
                         jj += 1
                         local_valid_output[i][jj] = local_context_out[i][j]
             local_context_out = self.dropout(local_valid_output)
@@ -171,6 +176,7 @@ class LCF_ATEPC(BertForTokenClassification):
             if 'cdm' in self.args.local_context_focus:
                 cdm_vec = self.feature_dynamic_mask(local_context_ids, polarities)
                 cdm_context_out = torch.mul(local_context_out, cdm_vec)
+                cdm_context_out = local_context_out
                 cat_out = torch.cat((global_context_out, cdm_context_out), dim=-1)
                 cat_out = self.linear_double(cat_out)
             elif 'cdw' in self.args.local_context_focus:

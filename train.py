@@ -208,16 +208,18 @@ def main(config):
     def save_model(path):
         # Save a trained model and the associated configuration,
         # Take care of the storage!
-        os.makedirs(path, exist_ok=True)
+        #os.makedirs(path, exist_ok=True)
         model_to_save = model.module if hasattr(model, 'module') else model  # Only save the model it-self
-        model_to_save.save_pretrained(path)
-        tokenizer.save_pretrained(path)
-        label_map = {i : label for i, label in enumerate(label_list,1)}
-        model_config = {"bert_model":args.bert_model,"do_lower": True,"max_seq_length":args.max_seq_length,"num_labels":len(label_list)+1,"label_map":label_map}
-        json.dump(model_config,open(os.path.join(path,"config.json"),"w"))
+        #model_to_save.save_pretrained(path)
+        #tokenizer.save_pretrained(path)
+        #label_map = {i : label for i, label in enumerate(label_list,1)}
+        #model_config = {"bert_model":args.bert_model,"do_lower": True,"max_seq_length":args.max_seq_length,"num_labels":len(label_list)+1,"label_map":label_map}
+        #json.dump(model_config,open(os.path.join(path,"config.json"),"w"))
         logger.info('save model to: {}'.format(path))
+        torch.save(model, path)
 
     def train():
+        best = 0.0
         train_features = convert_examples_to_features(
             train_examples, label_list, args.max_seq_length, tokenizer)
         logger.info("***** Running training *****")
@@ -254,14 +256,14 @@ def main(config):
                                            l_mask)
                 loss = loss_ate + loss_apc
                 loss.backward()
-                if step % 50 == 0:
+                if step % 20 == 0:
                     print(loss, step)
                 nb_tr_examples += input_ids_spc.size(0)
                 nb_tr_steps += 1
                 optimizer.step()
                 optimizer.zero_grad()
                 global_step += 1
-                if global_step % args.eval_steps == 0:
+                if global_step % 40 == 0:
                     if epoch >= args.num_train_epochs-2 or args.num_train_epochs<=2:
                         # evaluate only in last 2 epochs
                         apc_result, ate_result = evaluate(eval_ATE=not args.use_bert_spc)
@@ -286,12 +288,14 @@ def main(config):
                             apc_result['max_apc_test_f1'] > max_apc_test_f1 or \
                             ate_result > max_ate_test_f1:
                             print("SAVING MODEL...")
-                            save_model(path)
-
+        #                    save_model('output/model.bin')
+            
                         current_apc_test_acc = apc_result['max_apc_test_acc']
                         current_apc_test_f1 = apc_result['max_apc_test_f1']
                         current_ate_test_f1 = round(ate_result, 2)
-
+                        if current_ate_test_f1 > best:
+                            save_model('output/model.bin')
+                            best = current_ate_test_f1
                         logger.info('*' * 80)
                         logger.info('Train {} Epoch{}, Evaluate for {}'.format(args.seed, epoch + 1, args.data_dir))
                         logger.info(f'APC_test_acc: {current_apc_test_acc}(max: {max_apc_test_acc})  '
@@ -302,7 +306,7 @@ def main(config):
                         else:
                             logger.info(f'ATE_test_f1: {current_ate_test_f1}(max:{max_ate_test_f1})')
                         logger.info('*' * 80)
-            save_model('output/model')
+            save_model('output/final.bin')
 
         return [max_apc_test_acc, max_apc_test_f1, max_ate_test_f1]
 
