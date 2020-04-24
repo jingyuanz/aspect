@@ -78,7 +78,8 @@ class Inferencer:
             if w == 2 or w == 3:
                 tmp.append(tokens[i])
                 i -= 1
-                
+                if w == 3 and (i<0 or seq[i] == 1):
+                    seq[i] = 2
             else:
                 if tmp:
                     span = tmp[::-1]
