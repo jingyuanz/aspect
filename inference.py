@@ -15,24 +15,26 @@ from pytorch_transformers.modeling_bert import BertModel, BertForSequenceClassif
 from seqeval.metrics import classification_report
 from torch.utils.data import (DataLoader, RandomSampler, SequentialSampler, TensorDataset)
 
-from utils.data_utils import ATEPCProcessor, convert_examples_to_features
+#from utils.data_utils import ATEPCProcessor, convert_examples_to_features
 # from model.lcf_atepc import LCF_ATEPC
-from model.lc_pred import LCF_ATEPC
+#from model.lc_pred import LCF_ATEPC
 from torch import load, save
 
 class Inferencer:
     def __init__(self):
         self.model_path = 'output/model'
-        self.processor = ATEPCProcessor()
-        self.labels = self.processor.get_labels()
-        self.n_class = len(self.labels)
+        #self.processor = ATEPCProcessor()
+        #self.labels = self.processor.get_labels()
+        #self.n_class = len(self.labels)
         self.tokenizer = BertTokenizer.from_pretrained('./output/model/vocab.txt')
-        self.device = torch.device("cuda:7" if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device("cuda:5" if torch.cuda.is_available() else 'cpu')
         #self.device = torch.device("cpu")
 
     def load_model(self):
 #        self.model = LCF_ATEPC.from_pretrained('./output/model/')
         self.model = load('./output/final.bin', map_location=self.device)
+        self.model.args.device = self.device
+        print(self.model.args)
         print(len(list(self.model.modules())))
         #for module in self.model.modules():
          #   print(module)
@@ -47,7 +49,7 @@ class Inferencer:
         origin_len = len(emb)
         input_mask = torch.LongTensor([[1]*len(emb) + [0]*(40-len(emb))]).to(self.device)
         valid_ids = torch.LongTensor([[1]*40]).to(self.device)
-        l_mask = input_mask
+        l_mask = input_mask.to(self.device)
         segment_ids = torch.LongTensor([[0]*40]).to(self.device)
 
 
@@ -64,6 +66,7 @@ class Inferencer:
         print(ate)
         spans = self.decode(ate, origin_len, tokens)
         print(emotion, spans)
+        return emotion, spans
 
     def decode(self, seq, olen, tokens):
         seq = seq[1:olen-1]

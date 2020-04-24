@@ -142,6 +142,7 @@ class LCF_ATEPC(BertForTokenClassification):
         # code block for ATE task
         batch_size, max_len, feat_dim = global_context_out.shape
         global_valid_output = torch.zeros(batch_size, max_len, feat_dim, dtype=torch.float32).to(self.args.device)
+        print(self.args.device)
         for i in range(batch_size):
             jj = -1
             for j in range(max_len):
