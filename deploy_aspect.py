@@ -21,6 +21,7 @@ def process():
     data = request.get_json(force=False, silent=False)
     # request_encoder = json.loads(json.dumps(data))
     # query = request_encoder['query']
+    print(data)
     query = data['text']
 #    emb = nlu.bert_encode([query], False)['vec']
 #    emb = torch.FloatTensor(emb).to(trainer.device)

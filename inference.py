@@ -32,7 +32,8 @@ class Inferencer:
 
     def load_model(self):
 #        self.model = LCF_ATEPC.from_pretrained('./output/model/')
-        self.model = load('./output/final.bin', map_location=self.device)
+        self.model = load('./output/model.bin', map_location=self.device)
+        
         self.model.args.device = self.device
         print(self.model.args)
         print(len(list(self.model.modules())))
@@ -94,6 +95,7 @@ class Inferencer:
             span = tmp[::-1]
             span = ''.join(span)
             spans.append(span)
+        spans = [x.replace('#','') for x in spans]
         return spans
 
 

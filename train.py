@@ -294,6 +294,7 @@ def main(config):
                         current_apc_test_f1 = apc_result['max_apc_test_f1']
                         current_ate_test_f1 = round(ate_result, 2)
                         if current_ate_test_f1 > best:
+                            print("HERER", current_ate_test_f1)
                             save_model('output/model.bin')
                             best = current_ate_test_f1
                         logger.info('*' * 80)
