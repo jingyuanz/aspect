@@ -194,7 +194,9 @@ class LCF_ATEPC(BertForTokenClassification):
             sa_out = self.bert_SA(cat_out)
             pooled_out = self.pooler(sa_out)
         else:
+            print(global_context_out.size())
             pooled_out = self.pooler(global_context_out)
+            print(pooled_out.size())
         pooled_out = self.dropout(pooled_out)
         apc_logits = self.dense(pooled_out)
 
